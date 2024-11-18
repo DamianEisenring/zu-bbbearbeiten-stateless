@@ -4,12 +4,10 @@ import helper
 
 app = Flask(__name__)
 
-
 @app.route("/")
 def index():
     items = helper.get_all()
     return render_template("index.html", items=items)
-
 
 @app.route("/add", methods=["POST"])
 def add():
@@ -17,7 +15,6 @@ def add():
     date = request.form.get("deadline")
     helper.add(text, date)
     return redirect(url_for("index"))
-
 
 @app.route("/update/<int:index>")
 def update(index):
