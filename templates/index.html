@@ -14,21 +14,21 @@
     <div style="margin-top: 50px;" class="ui container">
         <h1 class="ui center aligned header">👏👏👏 Zu Bbbearbeiten</h1>
         <div class="ui divider" />
-        <form name="item" class="ui form" action="/add" method="post">
+        <form name="todo" class="ui form" action="/add" method="post">
             <div class="field" style="margin-top: 10px;">
-                <div for="text" class="ui pointing below label">Was gibbbt es zu tun?</div>
+                <div for="title" class="ui pointing below label">Was gibbbt es zu tun?</div>
                 <div class="ui action input">
-                    <input autofocus name="text" type="text" name="text" placeholder="Fürs Modul lernen...">
+                    <input autofocus name="title" type="text" placeholder="Fürs Modul lernen...">  <!-- 'text' zu 'title' geändert -->
                     <button class="ui blue button" type="submit">Hinzufügen</button>
                 </div>
             </div>
 
         </form>
 
-        {% for item in items %}
+        {% for todo in todos %}
         <div class="ui segment" style="overflow:hidden; position: relative">
-            <span class="ui header" style="margin-left: 0.5em;">{{item.text}}</span>
-            {% if item.isCompleted %}
+            <span class="ui header" style="margin-left: 0.5em;">{{todo.title}}</span>  <!-- 'item.text' zu 'todo.title' geändert -->
+            {% if todo.isCompleted %}
             <a class="ui green left corner label" href="/update/{{loop.index0}}"><i
                     class="check square outline icon"></i></a>
             {% else %}
@@ -43,11 +43,9 @@
 
         $(document).ready(function () {
 
-            document.item.text.focus();
+            document.todo.title.focus();  <!-- 'item.text' zu 'todo.title' geändert -->
 
         });
 
     </script>
-
-
 </html>
