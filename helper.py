@@ -1,26 +1,24 @@
 import datetime
-import operator
-from dataclasses import dataclass
 import io
 import csv
+from flask_sqlalchemy import SQLAlchemy
+from database import db
 
-items = []
 
-
-@dataclass
-class Item:
-    text: str
-    date: datetime
-    category: str
-    description: str
-    isCompleted: bool = False
+class Item(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    text = db.Column(db.String)
+    date = db.Column(db.DateTime)
+    category = db.Column(db.String)
+    description = db.Column(db.String)
+    isCompleted = db.Column(db.Boolean, default=False)
 
 
 def get_csv():
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow(["Titel", "Datum", "Kategorie", "Beschreibung", "Erledigt?"])
-    for item in items:
+    for item in Item.query.all():
         writer.writerow(
             [
                 item.text,
@@ -51,17 +49,28 @@ def add(text, date=None, category=None, description=None):
 
     if description is None:
         description = ""
-    items.append(Item(text, date, category, description))
-    items.sort(key=lambda x: (x.date, x.category))
+
+    item = Item(text=text, date=date, category=category, description=description)
+    db.session.add(item)
+    db.session.commit()
 
 
-def get_all():
-    return items
+def get_all(sorted=False):
+    if sorted:
+        return [item for item in Item.query.order_by(Item.date.asc(), Item.category.desc())]
+    else:
+        return Item.query.all()
 
 
-def get(index):
-    return items[index]
+def get(id):
+    return Item.query.get(id)
 
 
-def update(index):
-    items[index].isCompleted = not items[index].isCompleted
+def update(id):
+    item = db.session.query(Item).get(id)
+    isCompleted = db.session.query(Item).get(id).isCompleted
+    print(item, isCompleted)
+    db.session.query(Item).filter(Item.id == id).update(
+        {Item.isCompleted: not isCompleted}
+    )
+    db.session.commit()
