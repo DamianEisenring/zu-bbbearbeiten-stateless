@@ -1,69 +1,68 @@
-name: Build and deploy container app to Azure Web App - zu-bbbearbeiten-stateless
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+# More info on Python, GitHub Actions, and Azure App Service: https://aka.ms/python-webapps-actions
+
+name: Build and deploy Python app to Azure Web App - bbb-stateless
 
 on:
   push:
     tags:
-      - 'v*'  # Reagiert auf Tags, die mit "v" beginnen, z.B. v1.0.0, v2.0.0
-  workflow_dispatch:
+      - "*"  # Reagiert auf alle Tags
+  workflow_dispatch:  # Manuelles Auslösen des Workflows
 
 jobs:
-  test:
-    runs-on: 'ubuntu-latest'
-
-    steps:
-    - uses: actions/checkout@v2
-
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-
-    - name: Run pytest
-      run: |
-        pytest --maxfail=1 --disable-warnings -q
-
   build:
-    runs-on: 'ubuntu-latest'
-    needs: test  # Der Build-Prozess startet nur, wenn die Tests erfolgreich sind
+    runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2  # Klonen des Repositories
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
+      - name: Set up Python version
+        uses: actions/setup-python@v4  # Aktualisierte Version von setup-python
+        with:
+          python-version: '3.11'
 
-    - name: Log in to registry
-      uses: docker/login-action@v2
-      with:
-        registry: https://mcr.microsoft.com/
-        username: ${{ secrets.AzureAppService_ContainerUsername_e4131c6103a64858a67298b4348ed9fb }}
-        password: ${{ secrets.AzureAppService_ContainerPassword_d06153b75cba4017afd8ba81a5d8e93a }}
+      - name: Create and start virtual environment
+        run: |
+          python -m venv venv  # Erstellen eines virtuellen Environments
+          source venv/bin/activate  # Aktivieren des virtuellen Environments
 
-    - name: Build and push container image to registry
-      uses: docker/build-push-action@v3
-      with:
-        push: true
-        tags: mcr.microsoft.com/${{ secrets.AzureAppService_ContainerUsername_e4131c6103a64858a67298b4348ed9fb }}/appsvc/staticsite:${{ github.ref }}
-        file: ./Dockerfile
+      - name: Install dependencies
+        run: |
+          source venv/bin/activate  # Aktivieren des virtuellen Environments
+          pip install --upgrade pip  # Pip aktualisieren
+          pip install -r requirements.txt  # Abhängigkeiten installieren
+
+      - name: Test with pytest
+        run: |
+          source venv/bin/activate  # Sicherstellen, dass das virtuelle Environment aktiv ist
+          pytest  # Tests mit pytest ausführen
+
+      - name: Upload artifact for deployment jobs
+        uses: actions/upload-artifact@v2  # Hochladen des Artifacts, das die Codebasis enthält
+        with:
+          name: python-app  # Name des Artifacts
+          path: .  # Das gesamte Verzeichnis (außer dem virtuellen Environment) hochladen
+          # !venv/ schließt das virtuelle Environment vom Hochladen aus
 
   deploy:
     runs-on: ubuntu-latest
-    needs: build
+    needs: build  # Der Deploy-Job startet nur, wenn der Build-Job erfolgreich ist
     environment:
-      name: 'production'
+      name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
     steps:
-    - name: Deploy to Azure Web App
-      id: deploy-to-webapp
-      uses: azure/webapps-deploy@v2
-      with:
-        app-name: 'zu-bbbearbeiten-stateless'
-        slot-name: 'production'
-        publish-profile: ${{ secrets.AzureAppService_PublishProfile_5c3a8865b88045109baaf9e5cee3d878 }}
-        images: 'mcr.microsoft.com/${{ secrets.AzureAppService_ContainerUsername_e4131c6103a64858a67298b4348ed9fb }}/appsvc/staticsite:${{ github.ref }}'
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v2  # Herunterladen des Artifacts aus dem Build-Job
+        with:
+          name: python-app  # Name des Artifacts
+          path: .  # Pfad, wo das Artifact gespeichert wird
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v2  # Azure Web App Deployment Action
+        id: deploy-to-webapp
+        with:
+          app-name: 'bbb-stateless'  # Dein Azure Web App Name
+          slot-name: 'Production'  # Deployment-Slot, hier "Production"
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_D2EBDE8FE6C0479AB1F0E513190B0F67 }}  # Dein Azure Publish Profile, in den GitHub Secrets gespeichert
