@@ -1,0 +1,29 @@
+# Ignoriere Python-Cache-Dateien
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignoriere Logdateien
+*.log
+
+# Ignoriere Umgebungsdateien
+.env
+
+# Ignoriere virtuelle Umgebungen
+venv/
+.venv/
+
+# Ignoriere Docker-spezifische Dateien
+Dockerfile
+docker-compose.yml
+*.dockerignore
+
+# Ignoriere IDE- und Editor-spezifische Dateien
+.vscode/
+.idea/
+*.swp
+
+# Ignoriere Systemdateien
+.DS_Store
+Thumbs.db
